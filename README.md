@@ -10,9 +10,13 @@ The blog lives at [log.fisher.sh](https://log.fisher.sh) ([source repo](https://
 
 ## Cloudflare Pages setup
 
+- Project name: `fisher-sh`
 - Build command: *(none - static files served directly)*
-- Output dir: `.` (repo root) or empty
-- Custom domain: `fisher.sh`
+- Output dir: `/` (repo root)
+- Custom domains: `fisher.sh`, `www.fisher.sh`
+- Source: GitHub `fisherevans/fisher-sh` on `main`
+
+Recreate-from-scratch runbook (CF Pages project + custom domain attach + redirect setup) lives in [nottingham-cloud / systems/log.md](https://github.com/fisherevans/nottingham-cloud/blob/main/systems/log.md#bootstrap--recovery-procedures). That doc is the canonical place for any infra work on this repo.
 
 ## Local preview
 
