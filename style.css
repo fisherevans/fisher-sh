@@ -65,6 +65,9 @@ body {
     font-variation-settings: 'opsz' 6;
     font-synthesis: none;
     font-optical-sizing: auto;
+    font-variant-ligatures: common-ligatures discretionary-ligatures contextual;
+    font-feature-settings: 'liga' 1, 'clig' 1, 'dlig' 1, 'calt' 1, 'kern' 1;
+    font-kerning: normal;
     background: var(--bg);
     color: var(--fg);
     line-height: 1.55;
