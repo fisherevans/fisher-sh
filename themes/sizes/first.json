@@ -1,0 +1,25 @@
+{
+  "sizes": {
+    "font-size-base-px": 24,
+    "font-size-h1-rem": 4,
+    "font-size-h2-rem": 1.5,
+    "max-width-px": 900,
+    "line-height-body": 1.25
+  },
+  "marauder": {
+    "opsz-body": 14,
+    "opsz-h1": 72,
+    "opsz-h2": 20,
+    "weight-body": 500,
+    "weight-h1": 800,
+    "weight-h2": 700,
+    "weight-link": 500
+  },
+  "bullets": {
+    "glyph": "\u2022",
+    "projects-glyph": "\u25e6",
+    "size-em": 1.5,
+    "offset-x-em": 0,
+    "offset-y-em": 0.04
+  }
+}
