@@ -14,11 +14,24 @@
  * inline <a class="kw"> renders identically to a non-link keyword.
  */
 
+/*
+ * Marauder is an optical-size + weight variable font. The 'opsz' axis
+ * runs 6 (Caption: body sizes) to 72 (Display: headlines). Each opsz
+ * value has tuned proportions for that visual size, so picking the
+ * right opsz per element is what gives the font its character.
+ *
+ * Demo cuts (per indestructibletype.com/Marauder):
+ *   body text 15-25px  ->  opsz 6
+ *   mid 30px          ->  opsz 10
+ *   60px              ->  opsz 20
+ *   140px display     ->  opsz 72
+ */
 @font-face {
     font-family: 'Marauder';
     src: url('/fonts/Marauder.woff2') format('woff2-variations'),
          url('/fonts/Marauder.woff2') format('woff2');
     font-weight: 100 900;
+    font-stretch: 25% 200%;
     font-style: normal;
     font-display: swap;
 }
@@ -27,6 +40,7 @@
     src: url('/fonts/Marauder-Italic.woff2') format('woff2-variations'),
          url('/fonts/Marauder-Italic.woff2') format('woff2');
     font-weight: 100 900;
+    font-stretch: 25% 200%;
     font-style: italic;
     font-display: swap;
 }
@@ -48,6 +62,9 @@ body {
     padding: 0;
     font-family: 'Marauder', 'Georgia', 'Iowan Old Style', 'Charter', serif;
     font-weight: 400;
+    font-variation-settings: 'opsz' 6;
+    font-synthesis: none;
+    font-optical-sizing: auto;
     background: var(--bg);
     color: var(--fg);
     line-height: 1.55;
@@ -65,15 +82,17 @@ main {
 
 h1 {
     font-size: 4.5rem;
-    font-weight: 800;
+    font-weight: 700;
+    font-variation-settings: 'opsz' 72;
     line-height: 1;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.015em;
     margin: 0 0 2.5rem;
 }
 
 h2 {
     font-size: 1.4rem;
     font-weight: 700;
+    font-variation-settings: 'opsz' 10;
     margin: 2.25rem 0 0.5rem;
 }
 
