@@ -1,25 +1,34 @@
 {
   "_comment": "Edit via editor.py (Settings tab). build.py renders this into dist/theme.css which is linked after style.css so these tokens override the defaults baked into the stylesheet.",
   "colors": {
-    "bg": "#f4ecd8",
-    "fg": "#2c2825",
-    "muted": "#8a7e6e",
-    "accent": "#a8460e",
-    "hover": "#6b2a0a"
+    "bg": "#f4f3ee",
+    "fg": "#1e1813",
+    "muted": "#908372",
+    "accent": "#2d2ad8",
+    "hover": "#0704ba",
+    "hover-bg": "#fff3a8"
   },
   "sizes": {
-    "font-size-base-px": 22,
-    "font-size-h1-rem": 4.5,
-    "font-size-h2-rem": 1.4,
+    "font-size-base-px": 24,
+    "font-size-h1-rem": 4,
+    "font-size-h2-rem": 1.5,
     "max-width-px": 720,
-    "line-height-body": 1.55
+    "line-height-body": 1.25
   },
   "marauder": {
-    "opsz-body": 6,
+    "opsz-body": 13,
     "opsz-h1": 72,
-    "opsz-h2": 10,
-    "weight-body": 400,
-    "weight-h1": 700,
-    "weight-h2": 700
+    "opsz-h2": 20,
+    "weight-body": 500,
+    "weight-h1": 800,
+    "weight-h2": 700,
+    "weight-link": 500
+  },
+  "bullets": {
+    "glyph": "•",
+    "projects-glyph": "◦",
+    "size-em": 1.5,
+    "offset-x-em": 0,
+    "offset-y-em": 0.04
   }
 }

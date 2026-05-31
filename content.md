@@ -1,21 +1,22 @@
 # fisher.sh
 
-welcome to this website. it's about fisher evans.
+welcome to this website about **fisher evans**.
 
-he's a 30-something dad. tall. big. makes good jokes.
+he's a 30-something husband & dad of 2. tall. big. makes good jokes.
 
 you can find his blog at [log.fisher.sh](https://log.fisher.sh) ... get it? good joke.
 
 ## location:
 
-- in the "greater [[burlington, vermont]]" area.
+- in the "greater **burlington, vermont** area".
 - enjoys working remotely.
 
 ## career:
 
-- [software engineer](https://github.com/fisherevans) *(somewhere in the principal/senior/staff range)*
+- [software engineer](https://github.com/fisherevans)
+  - *somewhere in the principal/senior/staff range*
 - currently employed at [[DataDog]]
-- prior work: [[skillz]], [[cox]]/[[dealer.com]], [[systems & software]]
+- prior work: [skillz](https://www.skillz.com), [cox](https://www.coxautoinc.com)]/[dealer.com](https://www.dealer.com), [systems & software](https://ssivt.com)
 - always open to new opportunities ([linkedin](https://www.linkedin.com/in/fisher-evans), [resume](/resume.pdf))
 
 ## hobbies:
@@ -25,7 +26,7 @@ you can find his blog at [log.fisher.sh](https://log.fisher.sh) ... get it? good
 - eating things
 - having hobbies
 
-## here are some projects you might be interested in:
+## projects:
 
 <!-- list-class: projects -->
 - [primortal](https://log.fisher.sh/projects/primortal/) --- a 2d rpg pixel art gba-esque game

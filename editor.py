@@ -22,6 +22,7 @@ srcdoc-with-null-origin path was painful for cross-origin font loading.
 import http.server
 import json
 import os
+import re
 import socketserver
 import sys
 import tempfile
@@ -40,6 +41,8 @@ DEFAULT_PORT = 4174
 CONTENT_PATH = ROOT / "content.md"
 THEME_PATH = ROOT / "theme.json"
 TEMPLATE_PATH = ROOT / "template.html"
+THEMES_DIR = ROOT / "themes"
+THEME_NAME_RE = re.compile(r'^[A-Za-z0-9_-]{1,40}$')
 
 
 # ----- editor UI (served at /) -----
@@ -81,20 +84,61 @@ EDITOR_HTML = r"""<!DOCTYPE html>
     iframe { flex: 1; width: 100%; border: none; background: #f4ecd8; }
 
     .settings { flex: 1; overflow: auto; padding: 1rem; background: #1e1c1a; }
-    .settings h3 { margin: 0 0 0.5rem; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #aaa; font-weight: 600; }
-    .settings .group { margin-bottom: 1.5rem; }
-    .settings .field { display: grid; grid-template-columns: 11rem 1fr 4.5rem; gap: 0.5rem; align-items: center; padding: 0.25rem 0; }
+    .settings h3 { margin: 1.25rem 0 0.5rem; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #aaa; font-weight: 600; }
+    .settings h3:first-child { margin-top: 0; }
+    .settings .group { margin-bottom: 1.25rem; }
+
+    .scheme-bar {
+      display: grid; grid-template-columns: 1fr auto auto auto; gap: 0.4rem;
+      align-items: center; padding: 0.5rem; margin-bottom: 0.75rem;
+      background: #2a2825; border: 1px solid #3a3835; border-radius: 6px;
+    }
+    .scheme-bar select {
+      padding: 0.3rem 0.5rem; background: #1e1c1a; color: #e8dec8;
+      border: 1px solid #3a3835; border-radius: 4px; font-size: 12px; min-width: 0;
+    }
+    .scheme-bar button {
+      padding: 0.3rem 0.6rem; background: #3a3835; color: #e8dec8;
+      border: 1px solid #4a4540; border-radius: 4px; cursor: pointer; font-size: 11px;
+      white-space: nowrap;
+    }
+    .scheme-bar button:hover { background: #4a4540; }
+    .scheme-bar button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .scheme-bar button.danger { background: transparent; color: #b85555; border-color: #4a3535; }
+    .scheme-bar button.danger:hover { background: #4a3535; color: #f4a5a5; }
+
+    .settings .field { display: grid; grid-template-columns: 11rem 1fr 5.5rem; gap: 0.5rem; align-items: center; padding: 0.25rem 0; }
+    .settings .field.color { grid-template-columns: 11rem 3rem 1fr; }
     .settings .field label { font-size: 12px; color: #c8bfae; }
-    .settings .field input[type=color] { width: 100%; height: 28px; padding: 0; border: 1px solid #3a3835; border-radius: 4px; background: transparent; cursor: pointer; }
-    .settings .field input[type=number],
-    .settings .field input[type=text] {
+    .settings .field input[type=color] {
+      width: 100%; height: 28px; padding: 0;
+      border: 1px solid #3a3835; border-radius: 4px;
+      background: transparent; cursor: pointer;
+    }
+    .settings .field input[type=text].hex {
+      padding: 0.25rem 0.5rem; background: #2a2825; color: #e8dec8;
+      border: 1px solid #3a3835; border-radius: 4px;
+      font-family: ui-monospace, 'SF Mono', monospace; font-size: 12px;
+      text-transform: lowercase;
+    }
+    .settings .field input[type=text].hex.invalid {
+      border-color: #b85555;
+    }
+    .settings .field input[type=number] {
       width: 100%; padding: 0.25rem 0.5rem; background: #2a2825; color: #e8dec8;
-      border: 1px solid #3a3835; border-radius: 4px; font-family: ui-monospace, 'SF Mono', monospace; font-size: 12px;
+      border: 1px solid #3a3835; border-radius: 4px;
+      font-family: ui-monospace, 'SF Mono', monospace; font-size: 12px;
     }
     .settings .field input[type=range] { width: 100%; }
-    .settings .field .hex { font-family: ui-monospace, 'SF Mono', monospace; font-size: 11px; color: #8a7e6e; text-align: right; }
-    .settings .field .val { font-family: ui-monospace, 'SF Mono', monospace; font-size: 11px; color: #8a7e6e; text-align: right; }
-    .settings .reset { margin-top: 1rem; padding: 0.4rem 0.75rem; background: transparent; color: #888; border: 1px solid #3a3835; border-radius: 4px; cursor: pointer; font-size: 11px; }
+    .settings .field .val {
+      font-family: ui-monospace, 'SF Mono', monospace; font-size: 11px;
+      color: #8a7e6e; text-align: right;
+    }
+    .settings .reset {
+      margin-top: 1.25rem; padding: 0.4rem 0.75rem;
+      background: transparent; color: #888; border: 1px solid #3a3835; border-radius: 4px;
+      cursor: pointer; font-size: 11px;
+    }
     .settings .reset:hover { color: #e0e0e0; border-color: #555; }
   </style>
 </head>
@@ -113,7 +157,7 @@ EDITOR_HTML = r"""<!DOCTYPE html>
       <textarea id="md" spellcheck="false" autofocus></textarea>
       <div class="settings" id="settings" style="display:none">
         <div id="settings-form"></div>
-        <button class="reset" id="reset-btn" type="button">reset to defaults</button>
+        <button class="reset" id="reset-btn" type="button">reset all to defaults</button>
       </div>
     </div>
     <div class="pane">
@@ -132,6 +176,8 @@ const leftHead = document.getElementById('left-head');
 
 let theme = null;
 let defaults = null;
+let schemeLists = { colors: [], sizes: [] };
+let selectedScheme = { colors: '', sizes: '' };
 let saveMdTimer = null;
 let saveThemeTimer = null;
 let reloadTimer = null;
@@ -147,14 +193,18 @@ function scheduleReload() {
 }
 
 async function loadInitial() {
-  const [mdResp, themeResp, defResp] = await Promise.all([
+  const [mdResp, themeResp, defResp, colorsResp, sizesResp] = await Promise.all([
     fetch('/content.md'),
     fetch('/theme.json'),
     fetch('/theme.defaults.json'),
+    fetch('/api/themes/colors'),
+    fetch('/api/themes/sizes'),
   ]);
   md.value = await mdResp.text();
   theme = await themeResp.json();
   defaults = await defResp.json();
+  schemeLists.colors = await colorsResp.json();
+  schemeLists.sizes = await sizesResp.json();
   renderSettingsForm();
   setStatus('ready');
 }
@@ -176,7 +226,8 @@ async function saveContent() {
 async function saveTheme() {
   try {
     const resp = await fetch('/save/theme', {
-      method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(theme, null, 2)
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(theme, null, 2)
     });
     if (!resp.ok) throw new Error('http ' + resp.status);
     dirty = false;
@@ -212,81 +263,307 @@ document.querySelectorAll('.topbar .tab').forEach(t => {
 });
 
 document.getElementById('reset-btn').addEventListener('click', () => {
+  if (!confirm('reset ALL theme values to defaults?')) return;
   theme = JSON.parse(JSON.stringify(defaults));
+  selectedScheme = { colors: '', sizes: '' };
   renderSettingsForm();
   saveTheme();
 });
 
-// settings form schema -- mirrors theme.json shape
+// ---- scheme list management ----
+
+async function refreshSchemeList(kind) {
+  const resp = await fetch('/api/themes/' + kind);
+  schemeLists[kind] = await resp.json();
+}
+
+async function loadScheme(kind, name) {
+  if (!name) return;
+  const resp = await fetch('/api/themes/' + kind + '/' + encodeURIComponent(name));
+  if (!resp.ok) { setStatus('load failed: ' + name); return; }
+  const data = await resp.json();
+  if (kind === 'colors') {
+    theme.colors = data;
+  } else {
+    if (data.sizes) theme.sizes = data.sizes;
+    if (data.marauder) theme.marauder = data.marauder;
+    if (data.bullets) theme.bullets = data.bullets;
+  }
+  selectedScheme[kind] = name;
+  renderSettingsForm();
+  saveTheme();
+  setStatus('loaded ' + kind + '/' + name);
+}
+
+async function saveSchemeAs(kind) {
+  const name = prompt('save ' + kind + ' scheme as:', selectedScheme[kind] || '');
+  if (!name) return;
+  if (!/^[A-Za-z0-9_-]{1,40}$/.test(name)) {
+    alert('name must match [A-Za-z0-9_-]{1,40}');
+    return;
+  }
+  await writeScheme(kind, name);
+  selectedScheme[kind] = name;
+  await refreshSchemeList(kind);
+  renderSettingsForm();
+}
+
+async function saveSchemeOverwrite(kind) {
+  const name = selectedScheme[kind];
+  if (!name) return;
+  await writeScheme(kind, name);
+}
+
+async function writeScheme(kind, name) {
+  const payload = kind === 'colors'
+    ? theme.colors
+    : { sizes: theme.sizes, marauder: theme.marauder, bullets: theme.bullets };
+  const resp = await fetch('/api/themes/' + kind + '/' + encodeURIComponent(name), {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(payload, null, 2)
+  });
+  if (resp.ok) {
+    setStatus('saved ' + kind + '/' + name);
+  } else {
+    setStatus('save scheme failed');
+  }
+}
+
+async function deleteScheme(kind) {
+  const name = selectedScheme[kind];
+  if (!name) return;
+  if (!confirm('delete ' + kind + ' scheme "' + name + '"?')) return;
+  const resp = await fetch('/api/themes/' + kind + '/' + encodeURIComponent(name), {
+    method: 'DELETE'
+  });
+  if (resp.ok) {
+    selectedScheme[kind] = '';
+    await refreshSchemeList(kind);
+    renderSettingsForm();
+    setStatus('deleted ' + kind + '/' + name);
+  }
+}
+
+// ---- form rendering ----
+
+const BULLET_OPTIONS = [
+  { value: '•', label: '•  dot' },
+  { value: '◦', label: '◦  open circle' },
+  { value: '▪', label: '▪  square (small)' },
+  { value: '▫', label: '▫  open square' },
+  { value: '◆', label: '◆  diamond' },
+  { value: '◇', label: '◇  open diamond' },
+  { value: '❖', label: '❖  ornate diamond' },
+  { value: '✦', label: '✦  four-pointed star' },
+  { value: '⁂', label: '⁂  asterism (three asterisks)' },
+  { value: '·', label: '·  middle dot' },
+  { value: '‣', label: '‣  triangle' },
+  { value: '›', label: '›  angle' },
+  { value: '⁃', label: '⁃  hyphen bullet' },
+  { value: '❦', label: '❦  floral heart' },
+  { value: '❧', label: '❧  rotated floral heart' },
+  { value: '§', label: '§  section sign' },
+];
+
 const FIELDS = [
-  { section: 'colors', title: 'colors', fields: [
+  { section: 'colors', kind: 'colors', title: 'colors', fields: [
     { key: 'bg', label: 'background', type: 'color' },
     { key: 'fg', label: 'text', type: 'color' },
     { key: 'muted', label: 'italic asides', type: 'color' },
     { key: 'accent', label: 'accent / links', type: 'color' },
     { key: 'hover', label: 'link hover', type: 'color' },
+    { key: 'hover-bg', label: 'link hover bg (highlight)', type: 'color' },
   ]},
-  { section: 'sizes', title: 'sizes', fields: [
+  { section: 'sizes', kind: 'sizes', title: 'sizes', fields: [
     { key: 'font-size-base-px', label: 'body size (px)', type: 'number', min: 10, max: 48, step: 1 },
     { key: 'font-size-h1-rem', label: 'h1 size (rem)', type: 'number', min: 1, max: 12, step: 0.1 },
     { key: 'font-size-h2-rem', label: 'h2 size (rem)', type: 'number', min: 0.6, max: 4, step: 0.05 },
     { key: 'max-width-px', label: 'content max-width (px)', type: 'number', min: 320, max: 1400, step: 10 },
     { key: 'line-height-body', label: 'body line-height', type: 'number', min: 1.0, max: 2.2, step: 0.05 },
   ]},
-  { section: 'marauder', title: 'marauder axes', fields: [
+  { section: 'marauder', kind: 'sizes', title: 'marauder axes', fields: [
     { key: 'opsz-body', label: 'body opsz (6-72)', type: 'range', min: 6, max: 72, step: 1 },
     { key: 'opsz-h2', label: 'h2 opsz (6-72)', type: 'range', min: 6, max: 72, step: 1 },
     { key: 'opsz-h1', label: 'h1 opsz (6-72)', type: 'range', min: 6, max: 72, step: 1 },
     { key: 'weight-body', label: 'body weight (100-900)', type: 'range', min: 100, max: 900, step: 50 },
     { key: 'weight-h2', label: 'h2 weight (100-900)', type: 'range', min: 100, max: 900, step: 50 },
     { key: 'weight-h1', label: 'h1 weight (100-900)', type: 'range', min: 100, max: 900, step: 50 },
+    { key: 'weight-link', label: 'link weight (100-900)', type: 'range', min: 100, max: 900, step: 50 },
+  ]},
+  { section: 'bullets', kind: 'sizes', title: 'bullets', fields: [
+    { key: 'glyph', label: 'main bullet glyph', type: 'select', options: BULLET_OPTIONS },
+    { key: 'projects-glyph', label: 'sub / projects glyph', type: 'select', options: BULLET_OPTIONS },
+    { key: 'size-em', label: 'size (em)', type: 'range', min: 0.5, max: 3, step: 0.05 },
+    { key: 'offset-x-em', label: 'x offset (em)', type: 'range', min: -1, max: 1, step: 0.02 },
+    { key: 'offset-y-em', label: 'y offset (em)', type: 'range', min: -0.6, max: 0.6, step: 0.01 },
   ]},
 ];
 
+function makeSchemeBar(kind) {
+  const bar = document.createElement('div');
+  bar.className = 'scheme-bar';
+
+  const sel = document.createElement('select');
+  const placeholder = document.createElement('option');
+  placeholder.value = '';
+  placeholder.textContent = '— pick a saved ' + kind + ' scheme —';
+  sel.appendChild(placeholder);
+  for (const name of schemeLists[kind]) {
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    if (name === selectedScheme[kind]) opt.selected = true;
+    sel.appendChild(opt);
+  }
+  sel.addEventListener('change', () => loadScheme(kind, sel.value));
+  bar.appendChild(sel);
+
+  const saveBtn = document.createElement('button');
+  saveBtn.textContent = 'save';
+  saveBtn.title = 'overwrite the selected scheme with current values';
+  saveBtn.disabled = !selectedScheme[kind];
+  saveBtn.addEventListener('click', () => saveSchemeOverwrite(kind));
+  bar.appendChild(saveBtn);
+
+  const saveAsBtn = document.createElement('button');
+  saveAsBtn.textContent = 'save as...';
+  saveAsBtn.addEventListener('click', () => saveSchemeAs(kind));
+  bar.appendChild(saveAsBtn);
+
+  const delBtn = document.createElement('button');
+  delBtn.textContent = 'delete';
+  delBtn.className = 'danger';
+  delBtn.disabled = !selectedScheme[kind];
+  delBtn.addEventListener('click', () => deleteScheme(kind));
+  bar.appendChild(delBtn);
+
+  return bar;
+}
+
+function isValidHex(v) { return /^#[0-9a-fA-F]{6}$/.test(v); }
+
+function makeField(group, f) {
+  const row = document.createElement('div');
+  row.className = 'field' + (f.type === 'color' ? ' color' : '');
+
+  const lbl = document.createElement('label');
+  lbl.textContent = f.label;
+  row.appendChild(lbl);
+
+  const current = theme[group.section][f.key];
+
+  if (f.type === 'color') {
+    const colorInput = document.createElement('input');
+    colorInput.type = 'color';
+    colorInput.value = current;
+    row.appendChild(colorInput);
+
+    const hex = document.createElement('input');
+    hex.type = 'text';
+    hex.className = 'hex';
+    hex.value = current;
+    hex.spellcheck = false;
+    row.appendChild(hex);
+
+    const commit = (val) => {
+      theme[group.section][f.key] = val;
+      colorInput.value = val;
+      hex.value = val;
+      hex.classList.remove('invalid');
+      dirty = true;
+      setStatus('editing theme...');
+      clearTimeout(saveThemeTimer);
+      saveThemeTimer = setTimeout(saveTheme, 350);
+    };
+
+    colorInput.addEventListener('input', () => commit(colorInput.value));
+    hex.addEventListener('input', () => {
+      const v = hex.value.trim();
+      if (isValidHex(v)) {
+        commit(v.toLowerCase());
+      } else {
+        hex.classList.add('invalid');
+      }
+    });
+    hex.addEventListener('focus', () => hex.select());
+  } else if (f.type === 'select') {
+    const sel = document.createElement('select');
+    sel.style.gridColumn = 'span 2';
+    sel.style.padding = '0.3rem 0.5rem';
+    sel.style.background = '#2a2825';
+    sel.style.color = '#e8dec8';
+    sel.style.border = '1px solid #3a3835';
+    sel.style.borderRadius = '4px';
+    sel.style.fontSize = '13px';
+    for (const opt of (f.options || [])) {
+      const o = document.createElement('option');
+      o.value = opt.value;
+      o.textContent = opt.label;
+      if (opt.value === current) o.selected = true;
+      sel.appendChild(o);
+    }
+    row.appendChild(sel);
+
+    sel.addEventListener('change', () => {
+      theme[group.section][f.key] = sel.value;
+      dirty = true;
+      setStatus('editing theme...');
+      clearTimeout(saveThemeTimer);
+      saveThemeTimer = setTimeout(saveTheme, 200);
+    });
+  } else {
+    const input = document.createElement('input');
+    input.type = f.type;
+    input.value = current;
+    if (f.min !== undefined) input.min = f.min;
+    if (f.max !== undefined) input.max = f.max;
+    if (f.step !== undefined) input.step = f.step;
+    row.appendChild(input);
+
+    const val = document.createElement('span');
+    val.className = 'val';
+    val.textContent = current;
+    row.appendChild(val);
+
+    input.addEventListener('input', () => {
+      const v = parseFloat(input.value);
+      theme[group.section][f.key] = v;
+      val.textContent = v;
+      dirty = true;
+      setStatus('editing theme...');
+      clearTimeout(saveThemeTimer);
+      saveThemeTimer = setTimeout(saveTheme, 350);
+    });
+  }
+  return row;
+}
+
 function renderSettingsForm() {
   settingsForm.innerHTML = '';
-  for (const group of FIELDS) {
+
+  // Color scheme picker + form
+  settingsForm.appendChild(makeSection('color scheme', 'colors'));
+  const colorsGroup = FIELDS.find(g => g.section === 'colors');
+  for (const f of colorsGroup.fields) settingsForm.appendChild(makeField(colorsGroup, f));
+
+  // Size scheme picker + sizes + marauder
+  settingsForm.appendChild(makeSection('size scheme', 'sizes'));
+  for (const g of FIELDS.filter(x => x.kind === 'sizes')) {
     const h = document.createElement('h3');
-    h.textContent = group.title;
+    h.textContent = g.title;
     settingsForm.appendChild(h);
-    const div = document.createElement('div');
-    div.className = 'group';
-    for (const f of group.fields) {
-      const row = document.createElement('div');
-      row.className = 'field';
-      const lbl = document.createElement('label');
-      lbl.textContent = f.label;
-      row.appendChild(lbl);
-      const input = document.createElement('input');
-      input.type = f.type;
-      const current = theme[group.section][f.key];
-      if (f.type === 'color') {
-        input.value = current;
-      } else {
-        input.value = current;
-        if (f.min !== undefined) input.min = f.min;
-        if (f.max !== undefined) input.max = f.max;
-        if (f.step !== undefined) input.step = f.step;
-      }
-      row.appendChild(input);
-      const val = document.createElement('span');
-      val.className = f.type === 'color' ? 'hex' : 'val';
-      val.textContent = current;
-      row.appendChild(val);
-      input.addEventListener('input', () => {
-        const raw = input.value;
-        const v = f.type === 'number' || f.type === 'range' ? parseFloat(raw) : raw;
-        theme[group.section][f.key] = v;
-        val.textContent = v;
-        dirty = true;
-        setStatus('editing theme...');
-        clearTimeout(saveThemeTimer);
-        saveThemeTimer = setTimeout(saveTheme, 350);
-      });
-      div.appendChild(row);
-    }
-    settingsForm.appendChild(div);
+    for (const f of g.fields) settingsForm.appendChild(makeField(g, f));
   }
+}
+
+function makeSection(title, kind) {
+  const wrap = document.createElement('div');
+  const h = document.createElement('h3');
+  h.textContent = title;
+  wrap.appendChild(h);
+  wrap.appendChild(makeSchemeBar(kind));
+  return wrap;
 }
 
 window.addEventListener('beforeunload', () => {
@@ -350,6 +627,7 @@ DEFAULT_THEME = {
         "muted": "#8a7e6e",
         "accent": "#a8460e",
         "hover": "#6b2a0a",
+        "hover-bg": "#fff3a8",
     },
     "sizes": {
         "font-size-base-px": 22,
@@ -365,8 +643,54 @@ DEFAULT_THEME = {
         "weight-body": 400,
         "weight-h1": 700,
         "weight-h2": 700,
+        "weight-link": 400,
+    },
+    "bullets": {
+        "glyph": "•",
+        "projects-glyph": "◦",
+        "size-em": 1.5,
+        "offset-x-em": 0,
+        "offset-y-em": 0.04,
     },
 }
+
+
+# ----- named theme schemes -----
+
+def _scheme_dir(kind: str) -> Path:
+    if kind not in ("colors", "sizes"):
+        raise ValueError(f"bad kind: {kind}")
+    p = THEMES_DIR / kind
+    p.mkdir(parents=True, exist_ok=True)
+    return p
+
+
+def list_schemes(kind: str) -> list[str]:
+    """Return sorted list of saved scheme names for kind."""
+    d = _scheme_dir(kind)
+    return sorted(p.stem for p in d.glob("*.json"))
+
+
+def read_scheme(kind: str, name: str) -> dict:
+    if not THEME_NAME_RE.match(name):
+        raise ValueError(f"bad name: {name}")
+    path = _scheme_dir(kind) / f"{name}.json"
+    return json.loads(path.read_text())
+
+
+def write_scheme(kind: str, name: str, data: dict) -> None:
+    if not THEME_NAME_RE.match(name):
+        raise ValueError(f"bad name: {name}")
+    path = _scheme_dir(kind) / f"{name}.json"
+    atomic_write_text(path, json.dumps(data, indent=2) + "\n")
+
+
+def delete_scheme(kind: str, name: str) -> None:
+    if not THEME_NAME_RE.match(name):
+        raise ValueError(f"bad name: {name}")
+    path = _scheme_dir(kind) / f"{name}.json"
+    if path.exists():
+        path.unlink()
 
 
 # ----- request handler -----
@@ -405,6 +729,21 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 "application/json; charset=utf-8",
             )
 
+        # /api/themes/<kind>          -> list of names
+        # /api/themes/<kind>/<name>   -> the scheme JSON
+        m = re.match(r"^/api/themes/(colors|sizes)(?:/([^/]+))?$", path)
+        if m:
+            kind, name = m.group(1), m.group(2)
+            if name is None:
+                payload = json.dumps(list_schemes(kind)).encode("utf-8")
+                return self._send(payload, "application/json; charset=utf-8")
+            try:
+                data = read_scheme(kind, name)
+            except (FileNotFoundError, ValueError):
+                return self.send_error(404)
+            payload = json.dumps(data, indent=2).encode("utf-8")
+            return self._send(payload, "application/json; charset=utf-8")
+
         # Static asset fall-through (style.css, fonts/, favicon.svg)
         return super().do_GET()
 
@@ -427,6 +766,34 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return self._send(b"ok", "text/plain")
 
         self.send_error(404)
+
+    def do_PUT(self):
+        length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(length).decode("utf-8") if length else ""
+        m = re.match(r"^/api/themes/(colors|sizes)/([^/]+)$", self.path)
+        if not m:
+            return self.send_error(404)
+        kind, name = m.group(1), m.group(2)
+        try:
+            data = json.loads(body)
+        except json.JSONDecodeError as e:
+            return self._send(str(e).encode(), "text/plain", status=400)
+        try:
+            write_scheme(kind, name, data)
+        except ValueError as e:
+            return self._send(str(e).encode(), "text/plain", status=400)
+        return self._send(b"ok", "text/plain")
+
+    def do_DELETE(self):
+        m = re.match(r"^/api/themes/(colors|sizes)/([^/]+)$", self.path)
+        if not m:
+            return self.send_error(404)
+        kind, name = m.group(1), m.group(2)
+        try:
+            delete_scheme(kind, name)
+        except ValueError as e:
+            return self._send(str(e).encode(), "text/plain", status=400)
+        return self._send(b"ok", "text/plain")
 
     def _send(self, payload: bytes, ctype: str, status: int = 200) -> None:
         self.send_response(status)

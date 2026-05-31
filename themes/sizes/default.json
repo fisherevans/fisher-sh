@@ -1,0 +1,17 @@
+{
+  "sizes": {
+    "font-size-base-px": 22,
+    "font-size-h1-rem": 4.5,
+    "font-size-h2-rem": 1.4,
+    "max-width-px": 720,
+    "line-height-body": 1.55
+  },
+  "marauder": {
+    "opsz-body": 6,
+    "opsz-h1": 72,
+    "opsz-h2": 10,
+    "weight-body": 400,
+    "weight-h1": 700,
+    "weight-h2": 700
+  }
+}

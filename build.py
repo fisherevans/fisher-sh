@@ -59,6 +59,27 @@ def expand_keywords(text: str) -> str:
     return text
 
 
+def normalize_list_indent(text: str) -> str:
+    """Round any indented list item up to 4-space-per-level.
+
+    python-markdown only nests lists when child items are indented by a
+    multiple of 4 spaces (or a tab). Most people type 2-space indents,
+    which markdown silently treats as a paragraph continuation of the
+    parent item -- so sub-bullets just don't render.
+
+    Map input indent levels to 4-space output levels:
+        1-2 input spaces  -> 4 output spaces  (level 1)
+        3-4 input spaces  -> 8 output spaces  (level 2)
+        5-6 input spaces  -> 12 output spaces (level 3)
+    """
+    def fix(m):
+        spaces, marker, rest = m.groups()
+        level = (len(spaces) + 1) // 2
+        return ("    " * level) + marker + rest
+
+    return re.sub(r'^( +)([-*+] )(.*)$', fix, text, flags=re.MULTILINE)
+
+
 def attach_list_classes(html: str) -> str:
     """Convert `<!-- list-class: NAME -->` markers into class= on the
     next <ul>. Lets content.md mark a list as `class="projects"` etc.
@@ -72,7 +93,8 @@ def attach_list_classes(html: str) -> str:
 
 
 def render_body(md_text: str) -> str:
-    pre = expand_keywords(md_text)
+    pre = normalize_list_indent(md_text)
+    pre = expand_keywords(pre)
     converter = markdown.Markdown(
         extensions=['attr_list', 'smarty'],
         output_format='html5',
@@ -93,6 +115,7 @@ THEME_KEY_TO_CSS_VAR = {
     "muted": "--muted",
     "accent": "--accent",
     "hover": "--hover",
+    "hover-bg": "--hover-bg",
     "font-size-base-px": ("--font-size-base", lambda v: f"{v}px"),
     "font-size-h1-rem": ("--font-size-h1", lambda v: f"{v}rem"),
     "font-size-h2-rem": ("--font-size-h2", lambda v: f"{v}rem"),
@@ -104,6 +127,14 @@ THEME_KEY_TO_CSS_VAR = {
     "weight-body": ("--weight-body", lambda v: f"{v}"),
     "weight-h1": ("--weight-h1", lambda v: f"{v}"),
     "weight-h2": ("--weight-h2", lambda v: f"{v}"),
+    "weight-link": ("--weight-link", lambda v: f"{v}"),
+    # Bullet glyphs are stored as raw unicode chars in JSON; CSS needs them
+    # wrapped in single quotes (string literal) as a `content:` value.
+    "glyph": ("--bullet-glyph", lambda v: f"'{v}'"),
+    "projects-glyph": ("--bullet-projects-glyph", lambda v: f"'{v}'"),
+    "size-em": ("--bullet-size", lambda v: f"{v}em"),
+    "offset-x-em": ("--bullet-offset-x", lambda v: f"{v}em"),
+    "offset-y-em": ("--bullet-offset-y", lambda v: f"{v}em"),
 }
 
 
@@ -111,7 +142,7 @@ def render_theme(theme: dict) -> str:
     """theme.json -> small CSS string that overrides :root tokens."""
     pairs = []
     flat = {}
-    for section in ("colors", "sizes", "marauder"):
+    for section in ("colors", "sizes", "marauder", "bullets"):
         if section in theme:
             flat.update(theme[section])
 
