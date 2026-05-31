@@ -1,31 +1,19 @@
 /*
  * fisher.sh - elegant cream + Marauder serif.
- * Single light theme; no dark-mode variant by design.
  *
- * Color tokens:
- *   --bg     cream paper
- *   --fg     warm dark grey (not pure black; reads softer on cream)
- *   --muted  italic asides + secondary text
- *   --accent links + highlighted keywords ("highlight" feel)
- *   --hover  link hover (deeper shade of accent)
+ * Layout, typography, and link behavior live here as defaults.
+ * The token values (colors, sizes, opsz axes, weights) are also
+ * declared in :root with sensible defaults so this file renders fine
+ * on its own. build.py emits a second tiny theme.css from theme.json
+ * which is linked AFTER this file in the template, so any value the
+ * user has tuned via the editor wins via the cascade.
  *
- * Future keyword tagging: add class="kw" + wrap in <a> when the tag
- * page exists. The .kw style matches .a-style by default so an
- * inline <a class="kw"> renders identically to a non-link keyword.
+ * Marauder is opsz + wght variable; the 'opsz' axis runs 6 (Caption,
+ * tuned for body sizes) to 72 (Display, tuned for headlines).
+ * Without setting it explicitly, browsers use a middle default
+ * that flattens the typeface's character.
  */
 
-/*
- * Marauder is an optical-size + weight variable font. The 'opsz' axis
- * runs 6 (Caption: body sizes) to 72 (Display: headlines). Each opsz
- * value has tuned proportions for that visual size, so picking the
- * right opsz per element is what gives the font its character.
- *
- * Demo cuts (per indestructibletype.com/Marauder):
- *   body text 15-25px  ->  opsz 6
- *   mid 30px          ->  opsz 10
- *   60px              ->  opsz 20
- *   140px display     ->  opsz 72
- */
 @font-face {
     font-family: 'Marauder';
     src: url('/fonts/Marauder.woff2') format('woff2-variations'),
@@ -51,6 +39,19 @@
     --muted: #8a7e6e;
     --accent: #a8460e;
     --hover: #6b2a0a;
+
+    --font-size-base: 22px;
+    --font-size-h1: 4.5rem;
+    --font-size-h2: 1.4rem;
+    --max-width: 720px;
+    --line-height-body: 1.55;
+
+    --opsz-body: 6;
+    --opsz-h1: 72;
+    --opsz-h2: 10;
+    --weight-body: 400;
+    --weight-h1: 700;
+    --weight-h2: 700;
 }
 
 * { box-sizing: border-box; }
@@ -61,8 +62,8 @@ body {
     margin: 0;
     padding: 0;
     font-family: 'Marauder', 'Georgia', 'Iowan Old Style', 'Charter', serif;
-    font-weight: 400;
-    font-variation-settings: 'opsz' 6;
+    font-weight: var(--weight-body);
+    font-variation-settings: 'opsz' var(--opsz-body);
     font-synthesis: none;
     font-optical-sizing: auto;
     font-variant-ligatures: common-ligatures discretionary-ligatures contextual;
@@ -70,32 +71,32 @@ body {
     font-kerning: normal;
     background: var(--bg);
     color: var(--fg);
-    line-height: 1.55;
-    font-size: 22px;
+    line-height: var(--line-height-body);
+    font-size: var(--font-size-base);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
 }
 
 main {
-    max-width: 720px;
+    max-width: var(--max-width);
     margin: 0 auto;
     padding: 5rem 1.75rem 6rem;
 }
 
 h1 {
-    font-size: 4.5rem;
-    font-weight: 700;
-    font-variation-settings: 'opsz' 72;
+    font-size: var(--font-size-h1);
+    font-weight: var(--weight-h1);
+    font-variation-settings: 'opsz' var(--opsz-h1);
     line-height: 1;
     letter-spacing: -0.015em;
     margin: 0 0 2.5rem;
 }
 
 h2 {
-    font-size: 1.4rem;
-    font-weight: 700;
-    font-variation-settings: 'opsz' 10;
+    font-size: var(--font-size-h2);
+    font-weight: var(--weight-h2);
+    font-variation-settings: 'opsz' var(--opsz-h2);
     margin: 2.25rem 0 0.5rem;
 }
 
@@ -167,10 +168,10 @@ a.kw:hover, a.kw:focus-visible {
 }
 
 @media (max-width: 600px) {
-    body { font-size: 19px; }
+    body { font-size: calc(var(--font-size-base) * 0.86); }
     main { padding: 3rem 1.25rem 4rem; }
-    h1 { font-size: 3.2rem; margin-bottom: 1.75rem; }
-    h2 { font-size: 1.25rem; }
+    h1 { font-size: calc(var(--font-size-h1) * 0.71); margin-bottom: 1.75rem; }
+    h2 { font-size: calc(var(--font-size-h2) * 0.9); }
     li { padding-left: 1.5rem; }
     li::before { left: 0.35rem; }
 }
