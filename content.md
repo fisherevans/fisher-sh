@@ -6,6 +6,8 @@ he's a 30-something husband & dad of 2. tall. big. makes good jokes.
 
 you can find his blog at [log.fisher.sh](https://log.fisher.sh) ... get it? good joke.
 
+<!-- divider -->
+
 ## location:
 
 - in the "greater **burlington, vermont** area".
@@ -27,6 +29,7 @@ you can find his blog at [log.fisher.sh](https://log.fisher.sh) ... get it? good
   *[board](https://boardgamegeek.com/user/fisherevans), video, disc golf, things*
 - eating things
 - having hobbies
+
 
 ## projects:
 

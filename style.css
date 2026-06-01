@@ -40,6 +40,7 @@
     --accent: #a8460e;
     --hover: #6b2a0a;
     --hover-bg: transparent;
+    --divider-color: #8a7e6e;
 
     --font-size-base: 22px;
     --font-size-h1: 4.5rem;
@@ -217,9 +218,18 @@ a.kw:hover, a.kw:focus-visible {
     margin: 2.5em auto;
     width: 180px;
     line-height: 0;
-    color: var(--muted);
+    color: var(--divider-color);
     text-align: center;
 }
+
+/* Text alignment classes for use via attr_list on any block:
+ *     this text is centered
+ *     {: .center }
+ * Works on paragraphs, headings, lists. Place {: .class } on a line
+ * by itself directly after the block you want to align. */
+.center { text-align: center; }
+.right  { text-align: right;  }
+.left   { text-align: left;   }
 .divider svg {
     display: inline-block;
     width: 100%;

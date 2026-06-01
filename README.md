@@ -43,6 +43,7 @@ The same `build.py` runs locally for a one-shot render:
 | `<!-- list-class: projects -->` before a list | adds `class="projects"` to the next `<ul>` (open-circle bullets) |
 | `<!-- divider -->` on its own line | inlines `dividers/flourish.svg` as a centered SVG that picks up the theme `--muted` color via `currentColor` |
 | `<!-- divider:name -->` | same, but inlines `dividers/<name>.svg` -- drop more SVGs in that folder to get more options |
+| `text\n{: .center }` on the next line | text-align: center on the preceding block. Also `.left` and `.right`. Works on paragraphs, headings, lists. |
 
 Smartypants is on, so `"foo"` becomes curly quotes, `...` becomes `…`, `---` becomes an em dash.
 

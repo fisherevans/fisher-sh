@@ -374,6 +374,7 @@ const FIELDS = [
     { key: 'accent', label: 'accent / links', type: 'color' },
     { key: 'hover', label: 'link hover', type: 'color' },
     { key: 'hover-bg', label: 'link hover bg (highlight)', type: 'color' },
+    { key: 'divider', label: 'divider color', type: 'color' },
   ]},
   { section: 'sizes', kind: 'sizes', title: 'sizes', fields: [
     { key: 'font-size-base-px', label: 'body size (px)', type: 'number', min: 10, max: 48, step: 1 },
@@ -628,6 +629,7 @@ DEFAULT_THEME = {
         "accent": "#a8460e",
         "hover": "#6b2a0a",
         "hover-bg": "#fff3a8",
+        "divider": "#8a7e6e",
     },
     "sizes": {
         "font-size-base-px": 22,

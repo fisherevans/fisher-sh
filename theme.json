@@ -6,7 +6,8 @@
     "muted": "#7a716a",
     "accent": "#e89b4b",
     "hover": "#1c1a17",
-    "hover-bg": "#e57806"
+    "hover-bg": "#e57806",
+    "divider": "#7a716a"
   },
   "sizes": {
     "font-size-base-px": 24,

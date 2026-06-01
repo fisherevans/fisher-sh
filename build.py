@@ -144,6 +144,7 @@ THEME_KEY_TO_CSS_VAR = {
     "accent": "--accent",
     "hover": "--hover",
     "hover-bg": "--hover-bg",
+    "divider": "--divider-color",
     "font-size-base-px": ("--font-size-base", lambda v: f"{v}px"),
     "font-size-h1-rem": ("--font-size-h1", lambda v: f"{v}rem"),
     "font-size-h2-rem": ("--font-size-h2", lambda v: f"{v}rem"),
