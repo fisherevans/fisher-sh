@@ -119,10 +119,28 @@ def attach_list_classes(html: str) -> str:
     )
 
 
+def hoist_atx_attrs(text: str) -> str:
+    """Move `{: .class }` from the line below an ATX heading inline.
+
+    python-markdown's attr_list extension accepts the next-line form
+    on paragraphs and lists but NOT on ATX headings — there it needs
+    to be inline (`# heading {: .class }`). This preprocessor lets you
+    write the more natural next-line form and just hoists it onto the
+    heading line before markdown sees it.
+    """
+    return re.sub(
+        r'^(#{1,6}[ \t]+[^\n]+?)[ \t]*\n[ \t]*(\{:[^}\n]+\})[ \t]*$',
+        r'\1 \2',
+        text,
+        flags=re.MULTILINE,
+    )
+
+
 def render_body(md_text: str) -> str:
     pre = normalize_list_indent(md_text)
     pre = expand_keywords(pre)
     pre = expand_dividers(pre)
+    pre = hoist_atx_attrs(pre)
     converter = markdown.Markdown(
         extensions=['attr_list', 'smarty'],
         output_format='html5',
