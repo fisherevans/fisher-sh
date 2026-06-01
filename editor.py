@@ -7,8 +7,8 @@
 Browser opens at http://localhost:<port>/. Layout: tabbed left pane
 (Content / Settings) and a live preview iframe on the right.
 
-The content pane is a textarea over content.md. Edits debounce-render
-into the preview after ~200ms and auto-save to content.md after ~800ms.
+The content pane is a textarea over content.html. Edits debounce-render
+into the preview after ~200ms and auto-save to content.html after ~800ms.
 Settings is a generated form over theme.json with the same render +
 save loop. Both files are written atomically (tmp + rename) so a SIGINT
 mid-write can't corrupt the source.
@@ -33,12 +33,12 @@ sys.path.insert(0, str(Path(__file__).parent))
 from build import (  # noqa: E402  (import after sys.path tweak)
     ROOT,
     load_theme,
-    render_body,
+    render_body_html,
     render_theme,
 )
 
 DEFAULT_PORT = 4174
-CONTENT_PATH = ROOT / "content.md"
+CONTENT_PATH = ROOT / "content.html"
 THEME_PATH = ROOT / "theme.json"
 TEMPLATE_PATH = ROOT / "template.html"
 THEMES_DIR = ROOT / "themes"
@@ -153,7 +153,7 @@ EDITOR_HTML = r"""<!DOCTYPE html>
   </div>
   <div class="panes">
     <div class="pane" id="left-pane">
-      <div class="pane-head" id="left-head">content.md</div>
+      <div class="pane-head" id="left-head">content.html</div>
       <textarea id="md" spellcheck="false" autofocus></textarea>
       <div class="settings" id="settings" style="display:none">
         <div id="settings-form"></div>
@@ -194,7 +194,7 @@ function scheduleReload() {
 
 async function loadInitial() {
   const [mdResp, themeResp, defResp, colorsResp, sizesResp] = await Promise.all([
-    fetch('/content.md'),
+    fetch('/content.html'),
     fetch('/theme.json'),
     fetch('/theme.defaults.json'),
     fetch('/api/themes/colors'),
@@ -253,7 +253,7 @@ document.querySelectorAll('.topbar .tab').forEach(t => {
     if (which === 'content') {
       md.style.display = '';
       settingsPane.style.display = 'none';
-      leftHead.textContent = 'content.md';
+      leftHead.textContent = 'content.html';
     } else {
       md.style.display = 'none';
       settingsPane.style.display = '';
@@ -588,14 +588,14 @@ _current_html = ""
 _current_theme_css = ""
 
 
-def rebuild_state(content_md: str | None = None, theme_obj: dict | None = None) -> None:
+def rebuild_state(content: str | None = None, theme_obj: dict | None = None) -> None:
     global _current_html, _current_theme_css
-    if content_md is None:
-        content_md = CONTENT_PATH.read_text()
+    if content is None:
+        content = CONTENT_PATH.read_text()
     if theme_obj is None:
         theme_obj = load_theme()
     template = TEMPLATE_PATH.read_text()
-    body_html = render_body(content_md)
+    body_html = render_body_html(content)
     with _state_lock:
         _current_html = template.replace("{{ content }}", body_html)
         _current_theme_css = render_theme(theme_obj)
@@ -719,8 +719,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 css = _current_theme_css
             return self._send(css.encode("utf-8"), "text/css; charset=utf-8")
 
-        if path == "/content.md":
-            return self._send(CONTENT_PATH.read_bytes(), "text/markdown; charset=utf-8")
+        if path == "/content.html":
+            return self._send(CONTENT_PATH.read_bytes(), "text/html; charset=utf-8")
 
         if path == "/theme.json":
             return self._send(THEME_PATH.read_bytes(), "application/json; charset=utf-8")
@@ -755,7 +755,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
         if self.path == "/save/content":
             atomic_write_text(CONTENT_PATH, body)
-            rebuild_state(content_md=body)
+            rebuild_state(content=body)
             return self._send(b"ok", "text/plain")
 
         if self.path == "/save/theme":

@@ -88,6 +88,9 @@ body {
 }
 
 main {
+    /* Hug the longest line, but never exceed the readable cap. Shrinks on
+     * narrow screens, grows to fit short content. */
+    width: fit-content;
     max-width: var(--max-width);
     margin: 0 auto;
     padding: 5rem 1.75rem 6rem;
@@ -228,6 +231,8 @@ a.kw:hover, a.kw:focus-visible {
  * Works on paragraphs, headings, lists. Place {: .class } on a line
  * by itself directly after the block you want to align. */
 .center { text-align: center; }
+.accent { color: var(--accent); }
+.muted { color: var(--muted); }
 .right  { text-align: right;  }
 .left   { text-align: left;   }
 .divider svg {

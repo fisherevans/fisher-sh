@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""build.py - render content.md + theme.json into dist/.
+"""build.py - render content.html + theme.json into dist/.
 
-Reads content.md, expands the [[wiki-style]] keyword markup, runs the
-markdown converter (with attr_list for {: .class} hooks and smarty for
-curly quotes / dashes / ellipses), injects the body into template.html,
+Reads content.html (raw HTML body), expands the [[wiki-style]] keyword
+markup and <!-- divider --> SVG shortcuts, injects the body into
+template.html,
 and renders theme.json into a tiny dist/theme.css that overrides the
 :root token defaults baked into style.css. Static assets (style.css,
 fonts/, favicon.svg) are copied verbatim.
@@ -25,8 +25,6 @@ import re
 import shutil
 from pathlib import Path
 
-import markdown
-
 ROOT = Path(__file__).parent
 DIST = ROOT / "dist"
 
@@ -36,7 +34,7 @@ OPTIONAL_FILES = ["resume.pdf"]
 DIVIDERS_DIR = "dividers"
 
 
-# ----- markdown render -----
+# ----- body render -----
 
 def expand_keywords(text: str) -> str:
     """Wiki-style keyword markup.
@@ -86,53 +84,17 @@ def expand_dividers(text: str) -> str:
     )
 
 
-def normalize_list_indent(text: str) -> str:
-    """Round any indented list item up to 4-space-per-level.
-
-    python-markdown only nests lists when child items are indented by a
-    multiple of 4 spaces (or a tab). Most people type 2-space indents,
-    which markdown silently treats as a paragraph continuation of the
-    parent item -- so sub-bullets just don't render.
-
-    Map input indent levels to 4-space output levels:
-        1-2 input spaces  -> 4 output spaces  (level 1)
-        3-4 input spaces  -> 8 output spaces  (level 2)
-        5-6 input spaces  -> 12 output spaces (level 3)
-    """
-    def fix(m):
-        spaces, marker, rest = m.groups()
-        level = (len(spaces) + 1) // 2
-        return ("    " * level) + marker + rest
-
-    return re.sub(r'^( +)([-*+] )(.*)$', fix, text, flags=re.MULTILINE)
+def render_body_html(html_text: str) -> str:
+    """The body source is raw HTML (content.html). We keep the two authoring
+    shortcuts that work fine in HTML - [[keyword]] / [[keyword|url]] markup and
+    <!-- divider --> SVG inlining - but run no markdown conversion."""
+    out = expand_keywords(html_text)
+    out = expand_dividers(out)
+    return out
 
 
-def attach_list_classes(html: str) -> str:
-    """Convert `<!-- list-class: NAME -->` markers into class= on the
-    next <ul>. Lets content.md mark a list as `class="projects"` etc.
-    without the attr_list-on-list awkwardness (attr_list attaches to
-    the LAST <li>, not the <ul>, which isn't what we want)."""
-    return re.sub(
-        r'<!--\s*list-class:\s*([A-Za-z0-9_-]+)\s*-->\s*<ul>',
-        r'<ul class="\1">',
-        html,
-    )
-
-
-def render_body(md_text: str) -> str:
-    pre = normalize_list_indent(md_text)
-    pre = expand_keywords(pre)
-    pre = expand_dividers(pre)
-    converter = markdown.Markdown(
-        extensions=['attr_list', 'smarty'],
-        output_format='html5',
-    )
-    html = converter.convert(pre)
-    return attach_list_classes(html)
-
-
-def render_page(md_text: str, template: str) -> str:
-    return template.replace("{{ content }}", render_body(md_text))
+def render_page(html_text: str, template: str) -> str:
+    return template.replace("{{ content }}", render_body_html(html_text))
 
 
 # ----- theme -----
@@ -196,7 +158,7 @@ def load_theme() -> dict:
 # ----- pipeline -----
 
 def build() -> None:
-    content = (ROOT / "content.md").read_text()
+    content = (ROOT / "content.html").read_text()
     template = (ROOT / "template.html").read_text()
     theme = load_theme()
 
