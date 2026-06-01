@@ -33,6 +33,23 @@
     font-display: swap;
 }
 
+@font-face {
+    font-family: 'Newsreader';
+    src: url('/fonts/Newsreader.woff2') format('woff2-variations'),
+         url('/fonts/Newsreader.woff2') format('woff2');
+    font-weight: 200 800;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Newsreader';
+    src: url('/fonts/Newsreader-Italic.woff2') format('woff2-variations'),
+         url('/fonts/Newsreader-Italic.woff2') format('woff2');
+    font-weight: 200 800;
+    font-style: italic;
+    font-display: swap;
+}
+
 :root {
     --bg: #f4ecd8;
     --fg: #2c2825;
@@ -70,7 +87,7 @@ html { -webkit-text-size-adjust: 100%; }
 body {
     margin: 0;
     padding: 0;
-    font-family: 'Marauder', 'Georgia', 'Iowan Old Style', 'Charter', serif;
+    font-family: 'Newsreader', 'Georgia', 'Iowan Old Style', 'Charter', serif;
     font-weight: var(--weight-body);
     font-variation-settings: 'opsz' var(--opsz-body);
     font-synthesis: none;
@@ -97,6 +114,7 @@ main {
 }
 
 h1 {
+    font-family: 'Marauder', 'Georgia', serif;
     font-size: var(--font-size-h1);
     font-weight: var(--weight-h1);
     font-variation-settings: 'opsz' var(--opsz-h1);
@@ -106,6 +124,7 @@ h1 {
 }
 
 h2 {
+    font-family: 'Marauder', 'Georgia', serif;
     font-size: var(--font-size-h2);
     font-weight: var(--weight-h2);
     font-variation-settings: 'opsz' var(--opsz-h2);
