@@ -13,7 +13,7 @@
     "font-size-base-px": 24,
     "font-size-h1-rem": 4,
     "font-size-h2-rem": 1.5,
-    "max-width-px": 510,
+    "max-width-px": 900,
     "line-height-body": 1.25
   },
   "marauder": {

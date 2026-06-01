@@ -1,17 +1,10 @@
 # fisher.sh
 
-
 you found a website about **fisher evans**. nice.
-{: .center }
 
-he's a 30-something husband & dad of 2.
-{: .center }
-
-tall. big. makes good jokes.
-{: .center }
+he's a 30-something husband & dad of 2. tall. big. makes good jokes.
 
 you can find his blog at [log.fisher.sh](https://log.fisher.sh) ... get it? good joke.
-{: .center }
 
 <!-- divider -->
 
