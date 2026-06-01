@@ -10,10 +10,10 @@
     "divider": "#7a716a"
   },
   "sizes": {
-    "font-size-base-px": 24,
+    "font-size-base-px": 20,
     "font-size-h1-rem": 4,
-    "font-size-h2-rem": 1.5,
-    "max-width-px": 900,
+    "font-size-h2-rem": 1.6,
+    "max-width-px": 960,
     "line-height-body": 1.25
   },
   "marauder": {
