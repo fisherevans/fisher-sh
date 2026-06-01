@@ -39,7 +39,7 @@ you can find his blog at [log.fisher.sh](https://log.fisher.sh) ... get it? good
 
 ## projects:
 
-- [primortal](https://log.fisher.sh/projects/primortal/) --- a 2d rpg pixel art gba-esque game
-- [metamorph](https://log.fisher.sh/projects/metamorph/) --- transforms data in the browser
-- [trmnldash](https://log.fisher.sh/projects/trmnldash/) --- bespoke dashboards for trmnl devices
-- [and more...](https://log.fisher.sh/projects/)
+- [primortal](https://log.fisher.sh/tags/primortal/) --- a 2d rpg pixel art gba-esque game
+- [metamorph](https://log.fisher.sh/tags/metamorph/) --- transforms data in the browser
+- [trmnldash](https://log.fisher.sh/tags/trmnldash/) --- bespoke dashboards for trmnl devices
+- [and more...](https://log.fisher.sh/tags/)
