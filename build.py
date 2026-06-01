@@ -59,7 +59,7 @@ def expand_keywords(text: str) -> str:
 
 
 def expand_dividers(text: str) -> str:
-    """Inline decorative SVG dividers.
+    """Decorative SVG dividers, referenced as a CSS mask (not inlined).
 
         <!-- divider -->        -> dividers/flourish.svg (default)
         <!-- divider:name -->   -> dividers/<name>.svg
@@ -74,8 +74,9 @@ def expand_dividers(text: str) -> str:
         svg_path = ROOT / DIVIDERS_DIR / f"{name}.svg"
         if not svg_path.exists():
             return f"<!-- divider:{name} (file not found) -->"
-        svg = svg_path.read_text().strip()
-        return f'<div class="divider">{svg}</div>'
+        # Reference the file as a CSS mask (see .divider in style.css) instead
+        # of inlining the SVG markup - keeps content.html small.
+        return f'<div class="divider" style="--divider-img: url(\'/{DIVIDERS_DIR}/{name}.svg\')"></div>'
 
     return re.sub(
         r'<!--\s*divider(?::([A-Za-z0-9_-]+))?\s*-->',

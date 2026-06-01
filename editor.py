@@ -53,6 +53,21 @@ EDITOR_HTML = r"""<!DOCTYPE html>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>fisher.sh - editor</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/xml-hint.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/html-hint.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closetag.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/xml-fold.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchtags.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.15.1/beautify-html.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; }
     html, body { margin: 0; height: 100%; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", sans-serif; }
@@ -66,6 +81,10 @@ EDITOR_HTML = r"""<!DOCTYPE html>
     .topbar .tab:hover { opacity: 1; }
     .topbar .status { margin-left: auto; opacity: 0.6; font-size: 12px; }
 
+    .CodeMirror { flex: 1; min-height: 0; height: auto; font-family: ui-monospace, 'SF Mono', 'Menlo', monospace; font-size: 14px; line-height: 1.55; }
+    .CodeMirror-hints { z-index: 60; font-size: 13px; }
+    #fmt-btn { padding: 0.2rem 0.7rem; background: #3a352f; color: #cbb29a; border: 1px solid #4a443c; border-radius: 4px; font: inherit; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; cursor: pointer; }
+    #fmt-btn:hover { background: #4a443c; color: #f4ecd8; }
     .panes { flex: 1; display: flex; min-height: 0; }
     .pane { flex: 1; display: flex; flex-direction: column; min-width: 0; }
     .pane + .pane { border-left: 1px solid #333; }
@@ -149,6 +168,7 @@ EDITOR_HTML = r"""<!DOCTYPE html>
       <span class="tab active" data-tab="content">content</span>
       <span class="tab" data-tab="settings">settings</span>
     </div>
+    <button id="fmt-btn" type="button" title="Format HTML (Shift-Cmd-F)">Format</button>
     <span class="status" id="status">connecting...</span>
   </div>
   <div class="panes">
@@ -183,6 +203,51 @@ let saveThemeTimer = null;
 let reloadTimer = null;
 let dirty = false;
 
+// --- CodeMirror over the content textarea: HTML highlighting, autocomplete,
+// auto-close tags, 2-space tab indent, and js-beautify formatting. ---
+const cm = CodeMirror.fromTextArea(md, {
+  mode: 'htmlmixed',
+  theme: 'material-darker',
+  lineNumbers: true,
+  lineWrapping: true,
+  indentUnit: 2,
+  tabSize: 2,
+  indentWithTabs: false,
+  autoCloseTags: true,
+  matchTags: { bothTags: true },
+  extraKeys: {
+    'Ctrl-Space': 'autocomplete',
+    'Cmd-Space': 'autocomplete',
+    'Tab': (c) => c.somethingSelected() ? c.indentSelection('add') : c.replaceSelection('  ', 'end'),
+    'Shift-Tab': (c) => c.indentSelection('subtract'),
+    'Shift-Cmd-F': () => formatDoc(),
+    'Shift-Ctrl-F': () => formatDoc(),
+  },
+});
+const fmtBtn = document.getElementById('fmt-btn');
+cm.on('inputRead', (c, change) => {
+  const ch = change.text[0];
+  if (ch === '<' || ch === ' ') c.showHint({ hint: CodeMirror.hint.html, completeSingle: false });
+});
+cm.on('change', () => {
+  dirty = true;
+  setStatus('editing...');
+  clearTimeout(saveMdTimer);
+  saveMdTimer = setTimeout(saveContent, 700);
+});
+function formatDoc() {
+  if (!window.html_beautify) { setStatus('formatter still loading...'); return; }
+  const out = html_beautify(cm.getValue(), {
+    indent_size: 2, wrap_line_length: 0, preserve_newlines: true,
+    max_preserve_newlines: 1, end_with_newline: true,
+  });
+  const sc = cm.getScrollInfo();
+  cm.setValue(out);
+  cm.scrollTo(sc.left, sc.top);
+  setStatus('formatted');
+}
+fmtBtn.addEventListener('click', () => formatDoc());
+
 function setStatus(text) { status.textContent = text; }
 
 function scheduleReload() {
@@ -200,7 +265,7 @@ async function loadInitial() {
     fetch('/api/themes/colors'),
     fetch('/api/themes/sizes'),
   ]);
-  md.value = await mdResp.text();
+  cm.setValue(await mdResp.text());
   theme = await themeResp.json();
   defaults = await defResp.json();
   schemeLists.colors = await colorsResp.json();
@@ -212,7 +277,7 @@ async function loadInitial() {
 async function saveContent() {
   try {
     const resp = await fetch('/save/content', {
-      method: 'POST', headers: {'Content-Type': 'text/markdown'}, body: md.value
+      method: 'POST', headers: {'Content-Type': 'text/html'}, body: cm.getValue()
     });
     if (!resp.ok) throw new Error('http ' + resp.status);
     dirty = false;
@@ -238,24 +303,20 @@ async function saveTheme() {
   }
 }
 
-md.addEventListener('input', () => {
-  dirty = true;
-  setStatus('editing...');
-  clearTimeout(saveMdTimer);
-  saveMdTimer = setTimeout(saveContent, 700);
-});
-
 document.querySelectorAll('.topbar .tab').forEach(t => {
   t.addEventListener('click', () => {
     document.querySelectorAll('.topbar .tab').forEach(x => x.classList.remove('active'));
     t.classList.add('active');
     const which = t.dataset.tab;
     if (which === 'content') {
-      md.style.display = '';
+      cm.getWrapperElement().style.display = '';
+      fmtBtn.style.display = '';
       settingsPane.style.display = 'none';
       leftHead.textContent = 'content.html';
+      cm.refresh();
     } else {
-      md.style.display = 'none';
+      cm.getWrapperElement().style.display = 'none';
+      fmtBtn.style.display = 'none';
       settingsPane.style.display = '';
       leftHead.textContent = 'theme.json';
     }
@@ -569,7 +630,7 @@ function makeSection(title, kind) {
 
 window.addEventListener('beforeunload', () => {
   if (dirty) {
-    const blob = new Blob([md.value], {type: 'text/markdown'});
+    const blob = new Blob([cm.getValue()], {type: 'text/html'});
     navigator.sendBeacon('/save/content', blob);
   }
 });

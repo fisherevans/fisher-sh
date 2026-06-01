@@ -231,17 +231,18 @@ a.kw:hover, a.kw:focus-visible {
     color: var(--bg);
 }
 
-/* Inline SVG dividers (via `<!-- divider -->` in content.md). The
- * wrapper sets the color so the SVG's `currentColor` fill picks up
- * the theme. Width controls overall size; height auto preserves the
- * SVG's viewBox aspect ratio. */
+/* Referenced SVG dividers (via `<!-- divider -->`, which expands to
+ * `<div class="divider" style="--divider-img: url('/dividers/<name>.svg')">`).
+ * The SVG is loaded as a CSS mask and tinted with --divider-color, so the
+ * file stays out of the HTML but the divider still follows the theme. */
 .divider {
     display: block;
     margin: 2.5em auto;
     width: 180px;
-    line-height: 0;
-    color: var(--divider-color);
-    text-align: center;
+    aspect-ratio: 310 / 106;
+    background-color: var(--divider-color);
+    -webkit-mask: var(--divider-img, url('/dividers/flourish.svg')) no-repeat center / contain;
+    mask: var(--divider-img, url('/dividers/flourish.svg')) no-repeat center / contain;
 }
 
 /* Text alignment classes for use via attr_list on any block:
@@ -254,11 +255,6 @@ a.kw:hover, a.kw:focus-visible {
 .muted { color: var(--muted); }
 .right  { text-align: right;  }
 .left   { text-align: left;   }
-.divider svg {
-    display: inline-block;
-    width: 100%;
-    height: auto;
-}
 
 @media (max-width: 600px) {
     body { font-size: calc(var(--font-size-base) * 0.86); }
