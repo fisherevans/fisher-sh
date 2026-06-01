@@ -31,8 +31,9 @@ ROOT = Path(__file__).parent
 DIST = ROOT / "dist"
 
 STATIC_FILES = ["style.css", "favicon.svg"]
-STATIC_DIRS = ["fonts"]
+STATIC_DIRS = ["fonts", "dividers"]
 OPTIONAL_FILES = ["resume.pdf"]
+DIVIDERS_DIR = "dividers"
 
 
 # ----- markdown render -----
@@ -57,6 +58,32 @@ def expand_keywords(text: str) -> str:
         text,
     )
     return text
+
+
+def expand_dividers(text: str) -> str:
+    """Inline decorative SVG dividers.
+
+        <!-- divider -->        -> dividers/flourish.svg (default)
+        <!-- divider:name -->   -> dividers/<name>.svg
+
+    The SVG is wrapped in <div class="divider"> so markdown sees a
+    block-level element (no surrounding <p>) and CSS can size/center it.
+    Inline form means the SVG inherits color from `currentColor` and
+    follows the theme without needing a separate request.
+    """
+    def inline(m: "re.Match[str]") -> str:
+        name = m.group(1) or "flourish"
+        svg_path = ROOT / DIVIDERS_DIR / f"{name}.svg"
+        if not svg_path.exists():
+            return f"<!-- divider:{name} (file not found) -->"
+        svg = svg_path.read_text().strip()
+        return f'<div class="divider">{svg}</div>'
+
+    return re.sub(
+        r'<!--\s*divider(?::([A-Za-z0-9_-]+))?\s*-->',
+        inline,
+        text,
+    )
 
 
 def normalize_list_indent(text: str) -> str:
@@ -95,6 +122,7 @@ def attach_list_classes(html: str) -> str:
 def render_body(md_text: str) -> str:
     pre = normalize_list_indent(md_text)
     pre = expand_keywords(pre)
+    pre = expand_dividers(pre)
     converter = markdown.Markdown(
         extensions=['attr_list', 'smarty'],
         output_format='html5',

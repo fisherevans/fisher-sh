@@ -208,6 +208,24 @@ a.kw:hover, a.kw:focus-visible {
     color: var(--bg);
 }
 
+/* Inline SVG dividers (via `<!-- divider -->` in content.md). The
+ * wrapper sets the color so the SVG's `currentColor` fill picks up
+ * the theme. Width controls overall size; height auto preserves the
+ * SVG's viewBox aspect ratio. */
+.divider {
+    display: block;
+    margin: 2.5em auto;
+    width: 180px;
+    line-height: 0;
+    color: var(--muted);
+    text-align: center;
+}
+.divider svg {
+    display: inline-block;
+    width: 100%;
+    height: auto;
+}
+
 @media (max-width: 600px) {
     body { font-size: calc(var(--font-size-base) * 0.86); }
     main { padding: 3rem 1.25rem 4rem; }

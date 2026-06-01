@@ -41,6 +41,8 @@ The same `build.py` runs locally for a one-shot render:
 | `[[burlington, vermont]]` | `<span class="kw">burlington, vermont</span>` (highlighted, not a link) |
 | `[[DataDog\|https://log.fisher.sh/tags/datadog/]]` | `<a class="kw" href="...">DataDog</a>` (highlighted + link to a blog tag page) |
 | `<!-- list-class: projects -->` before a list | adds `class="projects"` to the next `<ul>` (open-circle bullets) |
+| `<!-- divider -->` on its own line | inlines `dividers/flourish.svg` as a centered SVG that picks up the theme `--muted` color via `currentColor` |
+| `<!-- divider:name -->` | same, but inlines `dividers/<name>.svg` -- drop more SVGs in that folder to get more options |
 
 Smartypants is on, so `"foo"` becomes curly quotes, `...` becomes `…`, `---` becomes an em dash.
 
