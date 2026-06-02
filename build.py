@@ -28,7 +28,7 @@ from pathlib import Path
 ROOT = Path(__file__).parent
 DIST = ROOT / "dist"
 
-STATIC_FILES = ["style.css", "favicon.png"]
+STATIC_FILES = ["style.css", "favicon.png", "og.png"]
 STATIC_DIRS = ["fonts", "dividers"]
 OPTIONAL_FILES = ["resume.pdf"]
 DIVIDERS_DIR = "dividers"
