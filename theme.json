@@ -2,16 +2,22 @@
   "_comment": "Edit via editor.py (Settings tab). build.py renders this into dist/theme.css which is linked after style.css so these tokens override the defaults baked into the stylesheet.",
   "colors": {
     "bg": "#1c1a17",
-    "fg": "#e8dec8",
+    "fg": "#d8d0bb",
     "muted": "#7a716a",
-    "accent": "#e89b4b",
+    "link-color": "#eda762",
+    "accent": "#e57806",
     "hover": "#1c1a17",
     "hover-bg": "#e57806",
-    "divider": "#7a716a"
+    "divider": "#7a716a",
+    "h1-color": "#f1e6cf",
+    "h2-color": "#f2e7d0",
+    "dim-color": "#7a716a",
+    "dim-hover": "#e8dec8",
+    "dim-hover-bg": "#3a2a14"
   },
   "sizes": {
     "font-size-base-px": 20,
-    "font-size-h1-rem": 4,
+    "font-size-h1-rem": 2.5,
     "font-size-h2-rem": 1.6,
     "max-width-px": 960,
     "line-height-body": 1.25
@@ -23,7 +29,8 @@
     "weight-body": 500,
     "weight-h1": 800,
     "weight-h2": 700,
-    "weight-link": 450
+    "weight-link": 450,
+    "accent-link-weight": 700
   },
   "bullets": {
     "glyph": "\u203a",
@@ -31,5 +38,15 @@
     "size-em": 1,
     "offset-x-em": 0.18,
     "offset-y-em": 0
+  },
+  "spacing": {
+    "h2-top-em": 2,
+    "h2-bottom-em": 0.5,
+    "p-top-em": 0,
+    "p-bottom-em": 0.5,
+    "ul-top-em": 0,
+    "ul-bottom-em": 0.5,
+    "li-top-em": 0,
+    "li-bottom-em": 0.2
   }
 }

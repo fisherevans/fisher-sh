@@ -104,10 +104,17 @@ THEME_KEY_TO_CSS_VAR = {
     "bg": "--bg",
     "fg": "--fg",
     "muted": "--muted",
+    "link-color": "--link-color",
     "accent": "--accent",
+    "accent-link-weight": "--accent-link-weight",
     "hover": "--hover",
     "hover-bg": "--hover-bg",
     "divider": "--divider-color",
+    "h1-color": "--h1-color",
+    "h2-color": "--h2-color",
+    "dim-color": "--dim-color",
+    "dim-hover": "--dim-hover",
+    "dim-hover-bg": "--dim-hover-bg",
     "font-size-base-px": ("--font-size-base", lambda v: f"{v}px"),
     "font-size-h1-rem": ("--font-size-h1", lambda v: f"{v}rem"),
     "font-size-h2-rem": ("--font-size-h2", lambda v: f"{v}rem"),
@@ -127,6 +134,16 @@ THEME_KEY_TO_CSS_VAR = {
     "size-em": ("--bullet-size", lambda v: f"{v}em"),
     "offset-x-em": ("--bullet-offset-x", lambda v: f"{v}em"),
     "offset-y-em": ("--bullet-offset-y", lambda v: f"{v}em"),
+
+    # Per-block spacing tokens (em-based so gaps scale with element font size)
+    "h2-top-em":     ("--h2-margin-top",    lambda v: f"{v}em"),
+    "h2-bottom-em":  ("--h2-margin-bottom", lambda v: f"{v}em"),
+    "p-top-em":      ("--p-margin-top",     lambda v: f"{v}em"),
+    "p-bottom-em":   ("--p-margin-bottom",  lambda v: f"{v}em"),
+    "ul-top-em":     ("--ul-margin-top",    lambda v: f"{v}em"),
+    "ul-bottom-em":  ("--ul-margin-bottom", lambda v: f"{v}em"),
+    "li-top-em":     ("--li-padding-top",    lambda v: f"{v}em"),
+    "li-bottom-em":  ("--li-padding-bottom", lambda v: f"{v}em"),
 }
 
 
@@ -134,7 +151,7 @@ def render_theme(theme: dict) -> str:
     """theme.json -> small CSS string that overrides :root tokens."""
     pairs = []
     flat = {}
-    for section in ("colors", "sizes", "marauder", "bullets"):
+    for section in ("colors", "sizes", "marauder", "bullets", "spacing"):
         if section in theme:
             flat.update(theme[section])
 

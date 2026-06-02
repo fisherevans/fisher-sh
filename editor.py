@@ -349,6 +349,7 @@ async function loadScheme(kind, name) {
     if (data.sizes) theme.sizes = data.sizes;
     if (data.marauder) theme.marauder = data.marauder;
     if (data.bullets) theme.bullets = data.bullets;
+    if (data.spacing) theme.spacing = data.spacing;
   }
   selectedScheme[kind] = name;
   renderSettingsForm();
@@ -378,7 +379,7 @@ async function saveSchemeOverwrite(kind) {
 async function writeScheme(kind, name) {
   const payload = kind === 'colors'
     ? theme.colors
-    : { sizes: theme.sizes, marauder: theme.marauder, bullets: theme.bullets };
+    : { sizes: theme.sizes, marauder: theme.marauder, bullets: theme.bullets, spacing: theme.spacing };
   const resp = await fetch('/api/themes/' + kind + '/' + encodeURIComponent(name), {
     method: 'PUT',
     headers: {'Content-Type': 'application/json'},
@@ -432,9 +433,15 @@ const FIELDS = [
     { key: 'bg', label: 'background', type: 'color' },
     { key: 'fg', label: 'text', type: 'color' },
     { key: 'muted', label: 'italic asides', type: 'color' },
-    { key: 'accent', label: 'accent / links', type: 'color' },
+    { key: 'h1-color', label: 'h1 (title) color', type: 'color' },
+    { key: 'h2-color', label: 'h2 (heading) color', type: 'color' },
+    { key: 'link-color', label: 'default link color', type: 'color' },
+    { key: 'accent', label: 'accent (a.accent links)', type: 'color' },
     { key: 'hover', label: 'link hover', type: 'color' },
     { key: 'hover-bg', label: 'link hover bg (highlight)', type: 'color' },
+    { key: 'dim-color', label: 'dim link color', type: 'color' },
+    { key: 'dim-hover', label: 'dim link hover', type: 'color' },
+    { key: 'dim-hover-bg', label: 'dim link hover bg', type: 'color' },
     { key: 'divider', label: 'divider color', type: 'color' },
   ]},
   { section: 'sizes', kind: 'sizes', title: 'sizes', fields: [
@@ -452,6 +459,7 @@ const FIELDS = [
     { key: 'weight-h2', label: 'h2 weight (100-900)', type: 'range', min: 100, max: 900, step: 50 },
     { key: 'weight-h1', label: 'h1 weight (100-900)', type: 'range', min: 100, max: 900, step: 50 },
     { key: 'weight-link', label: 'link weight (100-900)', type: 'range', min: 100, max: 900, step: 50 },
+    { key: 'accent-link-weight', label: 'a.accent weight (100-900)', type: 'range', min: 100, max: 900, step: 50 },
   ]},
   { section: 'bullets', kind: 'sizes', title: 'bullets', fields: [
     { key: 'glyph', label: 'main bullet glyph', type: 'select', options: BULLET_OPTIONS },
@@ -459,6 +467,16 @@ const FIELDS = [
     { key: 'size-em', label: 'size (em)', type: 'range', min: 0.5, max: 3, step: 0.05 },
     { key: 'offset-x-em', label: 'x offset (em)', type: 'range', min: -1, max: 1, step: 0.02 },
     { key: 'offset-y-em', label: 'y offset (em)', type: 'range', min: -0.6, max: 0.6, step: 0.01 },
+  ]},
+  { section: 'spacing', kind: 'sizes', title: 'spacing (em)', fields: [
+    { key: 'h2-top-em',     label: 'h2 space above',     type: 'range', min: 0, max: 4, step: 0.05 },
+    { key: 'h2-bottom-em',  label: 'h2 space below',     type: 'range', min: 0, max: 4, step: 0.05 },
+    { key: 'p-top-em',      label: 'paragraph above',    type: 'range', min: 0, max: 3, step: 0.05 },
+    { key: 'p-bottom-em',   label: 'paragraph below',    type: 'range', min: 0, max: 3, step: 0.05 },
+    { key: 'ul-top-em',     label: 'list above',         type: 'range', min: 0, max: 3, step: 0.05 },
+    { key: 'ul-bottom-em',  label: 'list below',         type: 'range', min: 0, max: 3, step: 0.05 },
+    { key: 'li-top-em',     label: 'list item above',    type: 'range', min: 0, max: 1, step: 0.01 },
+    { key: 'li-bottom-em',  label: 'list item below',    type: 'range', min: 0, max: 1, step: 0.01 },
   ]},
 ];
 
@@ -691,6 +709,11 @@ DEFAULT_THEME = {
         "hover": "#6b2a0a",
         "hover-bg": "#fff3a8",
         "divider": "#8a7e6e",
+        "h1-color": "#2c2825",
+        "h2-color": "#2c2825",
+        "dim-color": "#8a7e6e",
+        "dim-hover": "#2c2825",
+        "dim-hover-bg": "rgba(168, 70, 14, 0.18)",
     },
     "sizes": {
         "font-size-base-px": 22,
@@ -707,6 +730,7 @@ DEFAULT_THEME = {
         "weight-h1": 700,
         "weight-h2": 700,
         "weight-link": 400,
+        "accent-link-weight": 700,
     },
     "bullets": {
         "glyph": "•",
@@ -714,6 +738,16 @@ DEFAULT_THEME = {
         "size-em": 1.5,
         "offset-x-em": 0,
         "offset-y-em": 0.04,
+    },
+    "spacing": {
+        "h2-top-em": 1.6,
+        "h2-bottom-em": 0.35,
+        "p-top-em": 0,
+        "p-bottom-em": 1,
+        "ul-top-em": 0,
+        "ul-bottom-em": 0.5,
+        "li-top-em": 0.05,
+        "li-bottom-em": 0.05,
     },
 }
 

@@ -54,10 +54,17 @@
     --bg: #f4ecd8;
     --fg: #2c2825;
     --muted: #8a7e6e;
+    --link-color: #5a4a3a;
     --accent: #a8460e;
+    --accent-link-weight: 700;
     --hover: #6b2a0a;
     --hover-bg: transparent;
     --divider-color: #8a7e6e;
+    --h1-color: #2c2825;
+    --h2-color: #2c2825;
+    --dim-color: #8a7e6e;
+    --dim-hover: #2c2825;
+    --dim-hover-bg: rgba(168, 70, 14, 0.18);
 
     --font-size-base: 22px;
     --font-size-h1: 4.5rem;
@@ -78,6 +85,17 @@
     --bullet-size: 1.5em;
     --bullet-offset-x: 0em;
     --bullet-offset-y: 0.04em;
+
+    /* Per-block spacing. em-based so gaps scale with the element's own
+     * font size (heading gaps stay proportional even as h2 grows). */
+    --h2-margin-top:    1.6em;
+    --h2-margin-bottom: 0.35em;
+    --p-margin-top:     0em;
+    --p-margin-bottom:  1em;
+    --ul-margin-top:    0em;
+    --ul-margin-bottom: 0.5em;
+    --li-padding-top:    0.05em;
+    --li-padding-bottom: 0.05em;
 }
 
 * { box-sizing: border-box; }
@@ -118,9 +136,10 @@ h1 {
     font-size: var(--font-size-h1);
     font-weight: var(--weight-h1);
     font-variation-settings: 'opsz' var(--opsz-h1);
+    color: var(--h1-color);
     line-height: 1;
     letter-spacing: -0.015em;
-    margin: 0 0 2.5rem;
+    margin: 0 0 var(--h2-margin-bottom);
 }
 
 h2 {
@@ -128,22 +147,23 @@ h2 {
     font-size: var(--font-size-h2);
     font-weight: var(--weight-h2);
     font-variation-settings: 'opsz' var(--opsz-h2);
-    margin: 2.25rem 0 0.5rem;
+    color: var(--h2-color);
+    margin: var(--h2-margin-top) 0 var(--h2-margin-bottom);
 }
 
 p {
-    margin: 0 0 1rem;
+    margin: var(--p-margin-top) 0 var(--p-margin-bottom);
 }
 
 ul {
     list-style: none;
     padding: 0;
-    margin: 0 0 0.5rem;
+    margin: var(--ul-margin-top) 0 var(--ul-margin-bottom);
 }
 
 li {
     position: relative;
-    padding: 0.05rem 0 0.05rem 1.75rem;
+    padding: var(--li-padding-top) 0 var(--li-padding-bottom) 1.75rem;
     margin: 0;
 }
 
@@ -186,10 +206,10 @@ em {
  * unless the user picks one. Transition is 220ms ease-out for a
  * smooth feel without going laggy. */
 a, a:visited {
-    color: var(--accent);
+    color: var(--link-color);
     font-weight: var(--weight-link);
     text-decoration: none;
-    border-bottom: 1px dotted var(--accent);
+    border-bottom: 1px dotted var(--link-color);
     padding-bottom: 1px;
     background-color: transparent;
     box-shadow: 0 0 0 0 transparent;
@@ -209,6 +229,19 @@ a:hover, a:focus-visible {
     outline: none;
 }
 
+/* Accent link variant: for the few links that should pull attention
+ * (the blog link, the resume button, etc.). Bolder + the orange
+ * accent color, otherwise inherits all the hover behavior. */
+a.accent, a.accent:visited {
+    color: var(--accent);
+    font-weight: var(--accent-link-weight);
+    border-bottom: 1px dotted var(--accent);
+}
+a.accent:hover, a.accent:focus-visible {
+    color: var(--hover);
+    border-bottom: 1px solid var(--hover);
+}
+
 .kw {
     color: var(--accent);
     font-weight: var(--weight-link);
@@ -224,6 +257,26 @@ a.kw:hover, a.kw:focus-visible {
     border-bottom: 1px solid var(--hover);
     background-color: var(--hover-bg);
     box-shadow: 0.15em 0 0 var(--hover-bg), -0.15em 0 0 var(--hover-bg);
+}
+
+/* Secondary / "dim" links - for things like old employers where you
+ * want a link but it shouldn't pull as much attention as a primary one.
+ * Solid underline by default (always present), muted text color,
+ * a soft tinted hover bg. Same transition curve as primary. */
+a.dim, a.dim:visited {
+    color: var(--dim-color);
+    font-weight: var(--weight-body);
+    border-bottom: 1px solid var(--dim-color);
+    text-decoration: none;
+    padding-bottom: 1px;
+    background-color: transparent;
+    box-shadow: 0 0 0 0 transparent;
+}
+a.dim:hover, a.dim:focus-visible {
+    color: var(--dim-hover);
+    border-bottom: 1px solid var(--dim-hover);
+    background-color: var(--dim-hover-bg);
+    box-shadow: 0.15em 0 0 var(--dim-hover-bg), -0.15em 0 0 var(--dim-hover-bg);
 }
 
 ::selection {
