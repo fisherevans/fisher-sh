@@ -197,6 +197,16 @@ def build() -> None:
             shutil.rmtree(dst)
         shutil.copytree(src, dst)
 
+    # .well-known passthrough (e.g. atproto-did for Bluesky handle verification).
+    # CF Pages skips dotfiles but makes an explicit exception for /.well-known/*,
+    # so copying it into dist/ is enough for it to be served at the apex.
+    wellknown = ROOT / ".well-known"
+    if wellknown.exists():
+        dst = DIST / ".well-known"
+        if dst.exists():
+            shutil.rmtree(dst)
+        shutil.copytree(wellknown, dst)
+
     print(f"built {DIST.relative_to(ROOT)}/")
 
 
